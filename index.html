@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Ingestion Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #1a1a1a;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #111;
+        }
+
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .summary-label {
+            font-size: 13px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #111;
+            margin-top: 8px;
+        }
+
+        .input-section {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 32px;
+        }
+
+        .input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .input-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .input-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .sample-link {
+            font-size: 13px;
+            color: #3b82f6;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .sample-link:hover {
+            text-decoration: underline;
+        }
+
+        button {
+            padding: 10px 24px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .tables-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .tables-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .table-count {
+            font-size: 12px;
+            color: #666;
+            background: #f3f4f6;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f9fafb;
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 12px 16px;
+            font-size: 13px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .hash-cell {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .toast-error {
+            background: #ef4444;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Event Ingestion Dashboard</h1>
+        </header>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="summary-label">Total Events</div>
+                <div class="summary-value" id="totalEvents">0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Total Amount</div>
+                <div class="summary-value" id="totalAmount">$0</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Success Rate</div>
+                <div class="summary-value" id="successRate">0%</div>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <div class="input-header">
+                <div class="input-title">Submit Event</div>
+                <div class="input-controls">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="simulateFailure">
+                        <label for="simulateFailure">Simulate Failure</label>
+                    </div>
+                </div>
+            </div>
+            <textarea id="eventPayload" placeholder='{"eventId": "evt-001", "ts": "2024-01-01T00:00:00", "type": "purchase", "userId": "user-001", "amount": "1200"}'></textarea>
+            <div class="button-row">
+                <span class="sample-link" onclick="loadSample()">Load sample event</span>
+                <button id="submitBtn" onclick="submitEvent()">Submit</button>
+            </div>
+        </div>
+
+        <div class="tables-section">
+            <div class="table-card">
+                <div class="table-header">
+                    <div class="table-title">Success Events</div>
+                    <div class="table-count" id="successCount">0</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event ID</th>
+                            <th>Type</th>
+                            <th>Value</th>
+                            <th>Hash</th>
+                        </tr>
+                    </thead>
+                    <tbody id="successTable"></tbody>
+                </table>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <div class="table-title">Failed Events</div>
+                    <div class="table-count" id="failedCount">0</div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Event ID</th>
+                            <th>Status</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody id="failedTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let successEvents = [];
+        let failedEvents = [];
+
+        async function fetchAggregates() {
+            try {
+                const response = await fetch(`${API_BASE}/aggregates`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Failed to fetch aggregates:', error);
+                return { counts: {}, sums: {} };
+            }
+        }
+
+        async function fetchEvents() {
+            try {
+                const response = await fetch(`${API_BASE}/events`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Failed to fetch events:', error);
+                return [];
+            }
+        }
+
+        async function updateDashboard() {
+            const [aggregates, events] = await Promise.all([fetchAggregates(), fetchEvents()]);
+
+            const totalCount = Object.values(aggregates.counts).reduce((a, b) => a + b, 0);
+            const totalSum = Object.values(aggregates.sums).reduce((a, b) => a + b, 0);
+            const successRate = successEvents.length + failedEvents.length > 0
+                ? Math.round((successEvents.length / (successEvents.length + failedEvents.length)) * 100)
+                : 0;
+
+            document.getElementById('totalEvents').textContent = totalCount;
+            document.getElementById('totalAmount').textContent = `$${totalSum.toLocaleString()}`;
+            document.getElementById('successRate').textContent = `${successRate}%`;
+
+            successEvents = events;
+            renderSuccessTable();
+        }
+
+        function renderSuccessTable() {
+            const tbody = document.getElementById('successTable');
+            document.getElementById('successCount').textContent = successEvents.length;
+
+            if (successEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No events yet</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = successEvents.slice(-10).reverse().map(event => `
+                <tr>
+                    <td>${event.event_id}</td>
+                    <td><span class="status-badge status-success">${event.event_type}</span></td>
+                    <td>$${event.value.toLocaleString()}</td>
+                    <td class="hash-cell">${event.hash || 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderFailedTable() {
+            const tbody = document.getElementById('failedTable');
+            document.getElementById('failedCount').textContent = failedEvents.length;
+
+            if (failedEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No failures yet</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = failedEvents.slice(-10).reverse().map(event => `
+                <tr>
+                    <td>${event.eventId || 'N/A'}</td>
+                    <td><span class="status-badge status-error">${event.status}</span></td>
+                    <td>${event.error}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function submitEvent() {
+            const payloadText = document.getElementById('eventPayload').value;
+            const simulateFailure = document.getElementById('simulateFailure').checked;
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (!payloadText.trim()) {
+                showToast('Please enter event data', 'error');
+                return;
+            }
+
+            let payload;
+            try {
+                payload = JSON.parse(payloadText);
+            } catch (error) {
+                showToast('Invalid JSON format', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/ingest`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ payload, simulate_failure: simulateFailure })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showToast('Event submitted successfully', 'success');
+                    await updateDashboard();
+                } else {
+                    const error = await response.json();
+                    failedEvents.push({
+                        eventId: payload.eventId || payload.event_id || 'N/A',
+                        status: response.status === 409 ? 'Duplicate' : response.status === 500 ? 'Server Error' : 'Validation Error',
+                        error: error.detail || 'Unknown error'
+                    });
+                    renderFailedTable();
+                    showToast(`Failed: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                failedEvents.push({
+                    eventId: payload.eventId || payload.event_id || 'N/A',
+                    status: 'Network Error',
+                    error: error.message
+                });
+                renderFailedTable();
+                showToast('Network error - is the server running?', 'error');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        function loadSample() {
+            const samples = [
+                { eventId: 'evt-001', ts: '2024-01-01T00:00:00', type: 'purchase', userId: 'user-001', amount: '1200' },
+                { eventId: 'evt-002', ts: '2024-01-01T01:00:00', type: 'purchase', userId: 'user-002', amount: '850' },
+                { eventId: 'evt-003', ts: '2024-01-01T02:00:00', type: 'refund', userId: 'user-001', amount: '200' },
+                { event_id: 'evt-004', timestamp: '2024-01-01T03:00:00', event_type: 'purchase', user_id: 'user-003', value: '1500' }
+            ];
+            const sample = samples[Math.floor(Math.random() * samples.length)];
+            document.getElementById('eventPayload').value = JSON.stringify(sample, null, 2);
+        }
+
+        function showToast(message, type) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        updateDashboard();
+    </script>
+</body>
+</html>
